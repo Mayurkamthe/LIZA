@@ -1,0 +1,20 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+android {
+    namespace 'com.jarvis.control'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.jarvis.control'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+}
+
+dependencies {
+    // Needed for NotificationCompat used by JarvisBridgeService's foreground notification.
+    implementation 'androidx.core:core-ktx:1.13.1'
+}

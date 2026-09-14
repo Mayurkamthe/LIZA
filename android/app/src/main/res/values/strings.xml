@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">JARVIS Control</string>
+    <string name="accessibility_description">Allows JARVIS to perform user-requested UI actions such as tapping, scrolling, typing, and reading screen content.</string>
+</resources>
