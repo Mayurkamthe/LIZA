@@ -30,8 +30,7 @@ jobs:
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
           cd "$ANDROID_SDK_ROOT/cmdline-tools"
 
-          curl -L \
-            -o commandlinetools.zip \
+          curl -L -o commandlinetools.zip \
             https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 
           unzip -q commandlinetools.zip
@@ -42,7 +41,7 @@ jobs:
 
       - name: Install Android SDK
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
+          yes | sdkmanager --licenses >/dev/null || true
 
           sdkmanager \
             "platform-tools" \
@@ -52,31 +51,73 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
+          gradle-version: "8.9"
 
-      - name: Check project
-        working-directory: android
+      - name: Environment check
         run: |
-          echo "Java:"
+          echo "===== JAVA ====="
           java -version
 
-          echo "Gradle:"
+          echo "===== GRADLE ====="
           gradle --version
 
-          echo "Android SDK:"
+          echo "===== ANDROID SDK ====="
           sdkmanager --list_installed
 
-      - name: Build debug APK
+      - name: Check Android project
         working-directory: android
         run: |
-          gradle assembleDebug --no-daemon --stacktrace
+          echo "===== PROJECT FILES ====="
+          find . -maxdepth 3 -type f | sort
+
+          echo "===== GRADLE TASKS ====="
+          gradle tasks --no-daemon --stacktrace
+
+      - name: Build JARVIS APK
+        working-directory: android
+        run: |
+          set +e
+
+          gradle :app:assembleDebug \
+            --no-daemon \
+            --stacktrace \
+            --info \
+            2>&1 | tee build.log
+
+          BUILD_EXIT=${PIPESTATUS[0]}
+
+          echo ""
+          echo "========================================"
+          echo "           BUILD DIAGNOSTICS"
+          echo "========================================"
+
+          echo ""
+          echo "===== WHAT WENT WRONG ====="
+          grep -n -A 30 -B 5 "What went wrong" build.log || true
+
+          echo ""
+          echo "===== EXECUTION FAILED ====="
+          grep -n -A 15 -B 5 "Execution failed" build.log || true
+
+          echo ""
+          echo "===== CAUSED BY ====="
+          grep -n -A 15 -B 3 "Caused by:" build.log | head -100 || true
+
+          echo ""
+          echo "===== LAST 100 LINES ====="
+          tail -100 build.log
+
+          exit $BUILD_EXIT
 
       - name: Verify APK
         run: |
-          ls -lh android/app/build/outputs/apk/debug/
+          echo "===== APK FILES ====="
+          find android/app/build/outputs -type f -name "*.apk" -ls
+
           test -f android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: JARVIS-debug-APK
