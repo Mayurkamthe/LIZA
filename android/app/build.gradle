@@ -2,9 +2,11 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
+
 android {
     namespace 'com.jarvis.control'
     compileSdk 35
+
     defaultConfig {
         applicationId 'com.jarvis.control'
         minSdk 26
@@ -12,9 +14,22 @@ android {
         versionCode 1
         versionName '1.0'
     }
+
+    // Fix Java 1.8 vs Kotlin 17 mismatch
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {
-    // Needed for NotificationCompat used by JarvisBridgeService's foreground notification.
     implementation 'androidx.core:core-ktx:1.13.1'
 }
